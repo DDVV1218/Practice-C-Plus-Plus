@@ -37,14 +37,23 @@ int main()
 			wm.ShowInfo();
 			break;
 		case 3: // 删除职工
+			wm.DeleteInfo();
+			wm.OutputInfo();
 			break;
 		case 4: // 修改职工
+			wm.ModifyPerson();
+			wm.OutputInfo();
 			break;
 		case 5: // 查找职工
+			wm.FindPerson();
 			break;
 		case 6: // 排序职工
+			wm.SortPerson();
+			wm.OutputInfo();
 			break;
 		case 7: // 清空文件
+			wm.CleanInfo();
+			wm.OutputInfo();
 			break;
 		}
 		system("pause");

@@ -21,11 +21,29 @@ public:
 	// 添加员工信息
 	void AddInfo();
 
+	// 判断添加的员工的序号是否有重复
+	bool IsRepeated(const int& id);
+
 	// 添加单个员工信息
 	void AddPerson(Worker* wptr);
 
+	// 删除员工的信息
+	void DeleteInfo();
+
 	// 显示员工信息
 	void ShowInfo();
+
+	// 修改职工信息
+	void ModifyPerson();
+
+	// 查找职工信息
+	void FindPerson();
+
+	// 排序职工信息
+	void SortPerson();
+
+	// 清空所有文档
+	void CleanInfo();
 
 	// 退出系统
 	void Exit();
