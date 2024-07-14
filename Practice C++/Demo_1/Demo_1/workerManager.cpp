@@ -32,6 +32,9 @@ void WorkerManager::Show_Menu()
 
 void WorkerManager::Exit()
 {
+
+	// 删除开辟的空间
+	delete[] this->workers;
 	std::cout << "欢迎下次使用！" << std::endl;
 	system("pause");
 	exit(0);			// 无论如何直接退出程序
