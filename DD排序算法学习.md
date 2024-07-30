@@ -137,7 +137,7 @@ void BubbleSort(int* arr, int size)
 
 分隔值一般可以取最左侧或者最右侧的元素
 
-快速排序算法的时间复杂度为 <font color='PaleGreen'>$O(nlog(n))$</font> ，空间复杂度为 <font color='PaleGreen'>$O(nlog(n))$</font> 
+快速排序算法的时间复杂度为 <font color='PaleGreen'>$O(nlogn)$</font> ，空间复杂度为 <font color='PaleGreen'>$O(nlogn)$</font> 
 
 ```C++
 void QuickSort(int* arr, int high, int low)
@@ -150,13 +150,14 @@ void QuickSort(int* arr, int high, int low)
         // 右侧寻找小于标定值的元素
         while (i < j && arr[j] >= target) { j--; }
         while (i < j && arr[i] <= target) { i++; }
+        // 这两行的等于号非常重要，如果不加等于号，碰到重复的数字，容易无法走出循环
         if (i < j)
         {
             std::swap(arr[i], arr[j]);
         }
     }
     
-    std::swap(arr[low], arr[i]);
+    std::swap(arr[low], arr[i]);		// 切记不要忘记交换最初的target，因为target没有移动
     QuickSort(arr, low, i - 1);
     QuickSort(arr, i + 1, high);
     
@@ -200,7 +201,7 @@ void CountSort(int* arr, int length)
 }
 ```
 
-## 堆排序
+## 七、堆排序
 
 堆（Heap）时一类特殊的数据结构，可以被看作是一颗完全二叉树的数组对象
 
@@ -209,11 +210,17 @@ void CountSort(int* arr, int length)
 1. 堆中某个节点的值总是不大于或不小于其父节点的值
 2. 堆总是一颗完全二叉树
 
-若索引从1开始标注，由上至下从左至右标注符合堆特性的完全二叉树，设树的深度为 $k$，且 $k$ 层所有的结点都连续集中在最左侧，可以得到如下规律：
+**<u>*若索引从1开始标注*</u>**，由上至下从左至右标注符合堆特性的完全二叉树，设树的深度为 $k$，且 $k$ 层所有的结点都连续集中在最左侧，可以得到如下规律：
 
 1. `parent(i) = i / 2`
 2. `left child(i) = 2 * i`
 3. `right child(i) = 2 * i  + 1`
+
+**<u>*若索引从0开始标注*</u>**，由上至下从左至右标注符合堆特性的完全二叉树，设树的深度为 $k$，且 $k$ 层所有的结点都连续集中在最左侧，可以得到如下规律：
+
+1. `parent(i) = (i + 1) / 2 - 1 = i / 2`
+2. `left child(i) = 2 * i + 1`
+3. `right child(i) = 2 * i + 2`
 
 当有一个新的元素要插入堆中时，先将其放置在最后的位置，再逐层向上比较更新父节点的值
 
@@ -246,22 +253,161 @@ void HeapShiftDown(vector<int>& arr)
 {
     int cur = 0;
     while (cur < arr.size())
-    {
-		int max_ind = (arr[2 * cur] > arr[2 * cur + 1]) ? 2 * cur : 2 * cur + 1;
-        if (arr[cur] < arr[max_ind])
+    {	
+        int max_ind;
+        if (2 * cur + 2 >= arr.size()) { max_ind = 2 * cur + 1; }
+        else if (2 * cur + 1 >= arr.size()) { continue; }
+        else
         {
-            std::swap(arr[cur], arr[max_ind]);
-            cur = max_ind;
+        	max_ind = (arr[2 * cur + 1] > arr[2 * cur + 2]) ? 2 * cur + 1 : 2 * cur + 2;
+            if (arr[cur] < arr[max_ind])
+            {
+                std::swap(arr[cur], arr[max_ind]);
+                cur = max_ind;
+            }
         }
     }
 }
 ```
 
+给定一个无序的数组，可以使用`Heapify`让其堆化，从而成为最大堆（最小堆）。`Heapify`算法的主要思想为：从最后一个叶子节点开始，倒着对每个叶子节点做`ShiftDown`操作，这个算法的时间复杂度为 <font color='PaleGreen'>$O(n)$</font>
 
+```C++
+void ShiftDown(int* arr, int start, int end)
+    // 从start位置开始到end位置的树进行shiftdown
+{
+    int size = end - start + 1;
+    int cur = start;
+    while (cur * 2 + 1 > end)	// 直到没有叶子节点
+    {
+        int max_ind;
+        if (cur * 2 + 2 <= end)
+        {
+            // 当左右子节点都存在
+            max_ind = (arr[2 * cur + 1] > arr[2 * cur + 2]) ? 2 * cur + 1 : 2 * cur + 2;
+        }
+        else
+        {
+            max_ind = 2 * cur + 1;
+        }
+        
+        if (arr[max_ind] > arr[cur]) 
+        {
+            std::swap(arr[max_ind], arr[cur]);
+            cur = max_ind;
+        }
+        else { break; }
+    }
+}
 
+void Heapify(int* arr, int size)
+{
+    // 找到最后一个叶子节点
+    int last_leaf_index = size / 2 - 1;
+    // 倒着对每个叶子节点做shiftdown
+    for (int i = last_leaf_index; i >= 0; i--)
+    {
+        ShiftDown(arr, i, size - 1);
+    }
+}
+```
 
+这个算法之所以时间复杂度是O(N)，是因为每次的`ShiftDown`都需要交换元素，考虑每层元素可能被交换的最多次数，第 $j$ 层（从第1层开始，一共$K$层）被交换的最多次数为 $K-j$ 次，而第$j$层的元素数目最多为$2^{j-1}$个，因此可以通过求和的方式，如下所示：
+$$
+S(k)=2^0(k-1)+2^1(k-2)+...+2^{k-1}(0)
+$$
+利用错位相减法求和，最终得到：
+$$
+S(k)=2^k-k-1
+$$
+根据元素总数和层数的关系：
+$$
+N = 2^k - 1
+$$
+因此可以得到时间复杂度的计算：
+$$
+S(N)=N-\log_2{(N+1)}=O(N)
+$$
 
+- 下面回到正题：堆排序
 
+我们知道，大根堆的根节点为最大值，小根堆的根节点为最小值，因此我们可以通过将无序数组`Heapify`后，将根节点与最后的叶节点交换位置，从而将最大值放置在数组最后。紧接着在剩下的数组中重复此过程（所做的也就是将队首的元素`ShiftDown`即可）
+
+堆排序算法的时间复杂度为 <font color='PaleGreen'>$O(nlogn)$</font> ，空间复杂度为 <font color='PaleGreen'>$O(1)$</font> 
+
+```C++
+void HeapSort(int* arr, int size)
+{
+    // 首先对数组进行堆化
+    Heapify(arr, size);
+    for (int i = 0; i < size - 1; i++)
+        // 其次交换最大元素与最后元素
+    {
+        std::swap(arr[0], arr[size - i - 1]);
+        // 除去最后i+1个元素后ShiftDown
+        ShiftDown(arr, 0, size - i - 2);
+    }
+    
+}
+```
+
+## 八、归并排序
+
+归并排序是建立再归并操作上的一种有效的排序算法，该算法采用分治法。主要思想为：将原序列分解成多个子序列，使得子序列有序，再合并有序的子序列使之成为更长的有序子序列。
+
+归并排序算法的时间复杂度为 <font color='PaleGreen'>$O(nlogn)$</font> ，空间复杂度为 <font color='PaleGreen'>$O(n)$</font> 
+
+```C++
+void Merge(int* arr, int* result, int start, int mid, int end)
+    // 合并两个有序数组
+{
+    int i = start, j = mid + 1, k = start;
+    while (i != mid + 1 && j != end + 1)
+    {
+        if (arr[i] > arr[j])
+        {
+            result[k++] = arr[j++];
+        }
+        else if (arr[i] < arr[j])
+        {
+            result[k++] = arr[i++];
+        }
+    }
+    while (i != mid + 1){ result[k++] = arr[i++]; }
+    while (j != end + 1){ result[k++] = arr[j++]; }
+    for (int z = start; z <= end; z++) { arr[z] = result[z]; }
+}
+
+void MergeSort(int* arr, int* result, int start, int end)
+{
+    int mid_idx;
+    if (start < end)
+    {
+        mid_idx = start + (start - end) / 2;
+        MergeSort(arr, result, start, mid_idx);
+        MergeSort(arr, result, mid_idx + 1, end);
+        Merge(arr, result, start, mid_idx, end);
+    }
+}
+```
+
+## 其他
+
+> STL里sort算法用的是什么排序算法？
+
+并非所有STL容器都需要用到`sort`算法。首先，关系型容器拥有自动排序功能，因为底层采用RB-Tree；其次，序列式容器中的`stack`、`queue`和`priority-queue`都有特定的出入口，不允许用户对元素排序；剩下的`vector`、`deque`都适用`sort`算法。
+
+实现逻辑：STL的sort算法，在数据量大时采用`QuickSort`快速排序法，分段归并排序。一旦分段后的数据量小于某个门槛，为避免快速排序法的递归调用带来过大的额外负荷，就改用`Insertion Sort`插入排序。如果递归层次过深，还会改用`Heap Sort`堆排序。
+
+> 为什么快速排序比堆排序性能好？
+
+第一、堆排序访问数据的方式没有快速排序好
+
+对于快速排序来说，数据是**<u>顺序访问</u>**的。而对于堆排序来说，数据是跳着访问的，这样对CPU缓存是不友好的。
+
+第二、对于同样的数据，排序过程中，堆排序的数据交换次数要多于快速排序
+
+**排序过程是由两个基本的操作组成的——<u>比较和交换</u>**。快速排序交换的次数不会比逆序度多。但是堆排序的第一步就是建堆，这个过程会打乱数据原有的相对选择顺序，导致数据有序度降低。
 
 
 
