@@ -158,6 +158,38 @@ const int DD:dd = 1;
    
    int DD:VV() const {};
    ```
+   
+   若该类的实例对象被`const`修饰，则此对象只可以使用`const`限定的成员函数，因为编译器会自动检查实例对象是否有可能被修改！
+   
+   ```C++
+   class Student
+   {
+   public:
+       Student() { age = 10; }
+       void GetAge();
+       void GetAge() const;
+   private:
+       int age;
+   }
+   
+   Student::GetAge() { return this->age; }
+   Student::GetAge() const 
+   {
+       return const_cast(Student&)(*this).GetAge();		// 可以使用const_cast来修改变量类型，从而间接调用其他成员函数
+   }
+   
+   int main()
+   {
+       const Student stu;
+       stu.GetAge();			// Error
+   }
+   ```
+   
+   
+
+6. 与迭代器`iterator`相关
+    - `const iterator`修饰STL的迭代器时，迭代器无法递增改变，但是可以解引用并修改底层的值
+    - `const_iterator`修饰STL的迭代器时，迭代器可以递增，但是无法解引用，底层无法改变
 
 ## vector容器
 
