@@ -754,6 +754,111 @@ int Data::m = 0;
 
 BSS段在程序执行之前会被系统自动清0，所以未初始化的全局变量和静态变量在程序执行之前已经为0。储存在全局（静态）数据区的变量**<u><font color='Salmon'>会在程序运行开始时就完成初始化，也是唯一的一次初始化</font></u>**。
 
+## Template MetaProgramming 模板元编程
+
+通常情况下，代码在运行期才会进行运行计算
+
+但是，模板的语句会在编译器就执行，例如遇到对应类型的模板实例化或者模板函数，编译期就会生成对应类型的类语句和函数
+
+```C++
+template<unsigned n>
+struct Factorial {
+    enum {value = n * Factorial<n-1>::value};
+}	// 在C++中，结构体或类内部包含枚举常量被用来存储计算结果，以便在编译时期就能确定阶乘的值
+
+template<> // template class "specialization"
+struct Factorial<0>{
+    enum { value = 1 };
+}
+
+std::cout << Factorial<10>::value << endl;
+// prints 3628800, but run during compile time!
+```
+
+此外，使用`constexpr`也可以实现程序的加速，因为`constexpr`修饰的语句会在编译器就计算好，因此也是一种Meta模板编程的实现。注意，`const`和`constexpr`修饰的变量只能传入常量表达式，例如下面的`fib(20)`是由`constexpr`定义的函数的具体实现，是可行的。
+
+```C++
+constexpr double fib(int n)  // function declared as constexpr
+{
+    if (n == 1) { return 1; }
+    return fib(n - 1) * n;
+}
+
+int main()
+{
+    const long long bigval = fib(20);
+    std::cout << bigval << std::endl;
+}
+```
+
+## Functions
+
+#### 模板中的函数类型
+
+在实际coding过程中，如果想要在函数中传入另一个函数作为参数，可以使用函数指针，也可以使用模板函数指定一个类型，例如：
+
+```C++
+template <typename InputIt, typename BinPred>
+int my_func(InputIt dd, BinPred vv)
+{
+    return vv(dd);
+}
+
+int count(int i)
+{
+    return 2 * i;
+}
+
+int main()
+{
+    int j = 1;
+    my_func(j, count);    // output: 2
+}
+```
+
+#### Lambda函数
+
+但是，如何在不传参的情况下知道或者修改作用域下的其他变量的值呢？可以使用`lambda`定义函数：
+
+```C++
+auto var = [capture-clause] (auto params) -> bool 
+{
+    expressions...
+}
+```
+
+```C++
+[]					// captures nothing
+[param]				// captures param by value
+[&limit]			// captures param by reference
+[&limit, upper]		// captures limit by reference, upper by value
+[&, limit]			// captures everything except limit by reference
+[&]					// captures everything by reference
+[=]					// captures everything by value
+```
+
+#### Functor
+
+使用类包装的函数，重载了`()`运算符
+
+```C++
+class functor
+{
+public:
+    int operator() (int arg) const {
+        expressions...
+    }
+}
+```
+
+#### std::function
+
+The STL has an overarching, standard function object. This is bigger and slightly more expensive than a function pointer or lambda.
+
+```C++
+std::function<return_type(param_types)> func
+```
+
 ## 箭头运算符重载 ->
 
 箭头运算符左变量的类型只能是两类：指向一个类的指针，类对象
